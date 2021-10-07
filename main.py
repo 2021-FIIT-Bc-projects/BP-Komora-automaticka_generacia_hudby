@@ -11,7 +11,7 @@ data = load_midi(".\\input_midi")
 notes = [element for notes in data for element in notes]
 n_vocab = len(list(set(notes)))
 
-no_of_timesteps = 16
+no_of_timesteps = 32
 input_list, output_list = prepare_data(data, no_of_timesteps)
 normalized_input_list = normalize_input(input_list)
 normalized_output_list = normalize_output(output_list)
@@ -24,11 +24,12 @@ x_val = reshapeX(x_val)
 model = lstm_model(n_vocab, no_of_timesteps)
 model.summary()
 mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='min', save_best_only=True, verbose=1)
-history = model.fit(np.array(x_tr), np.array(y_tr), batch_size=100, epochs=30, validation_data=(np.array(x_val), np.array(y_val)), verbose=1, callbacks=[mc])
+history = model.fit(np.array(x_tr), np.array(y_tr), batch_size=100, epochs=20, validation_data=(np.array(x_val), np.array(y_val)), verbose=1, callbacks=[mc])
 
 best_model = load_model('best_model.h5')
-predictions = generate_predictions(x_val, best_model, no_of_timesteps, range_of_prediction=no_of_timesteps)
+predictions = generate_predictions(x_val, best_model, no_of_timesteps, n_vocab, range_of_prediction=2*no_of_timesteps)
 
+# input_list = input_list * float(n_vocab)
 unique_x = list(set(input_list.ravel()))
 x_int_to_note = dict((number, note_) for number, note_ in enumerate(unique_x))
 

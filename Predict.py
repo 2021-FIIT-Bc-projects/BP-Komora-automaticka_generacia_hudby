@@ -3,7 +3,7 @@ import numpy as np
 from Data_handling import reshapeX
 
 
-def generate_predictions(x_val, model, no_of_timesteps, range_of_prediction=10):
+def generate_predictions(x_val, model, no_of_timesteps, n_vocab, range_of_prediction=10):
     ind = np.random.randint(0, len(x_val) - 1)
     random_music = x_val[ind]
     predictions = []

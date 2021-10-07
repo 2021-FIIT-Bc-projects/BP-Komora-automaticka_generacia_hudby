@@ -26,9 +26,6 @@ def load_midi(midi_dir) -> np.array:
                     # Looping over elements of song
                     for element in notes_to_parse:
 
-                        if str(element.quarterLength) == '1/3':
-                            print(element.fullName)
-
                         # note
                         if isinstance(element, note.Note):
                             note_seq.append(str(element.pitch) + " " + str(element.quarterLength))
