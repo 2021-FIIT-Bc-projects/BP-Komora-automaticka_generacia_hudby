@@ -94,11 +94,8 @@ def prepare_data(data, input_sequence_length) -> (np.array, np.array):
     return input_list, output_list
 
 
-def normalize_input(input_list) -> np.array:
+def normalize_input(input_list, note_to_int) -> np.array:
     """convert input np.array from note sequences to int sequences"""
-
-    raveled_input_list = list(set(input_list.ravel()))
-    note_to_int = dict((note_, number) for number, note_ in enumerate(raveled_input_list))
 
     input_seq = []
     for i in input_list:
@@ -113,11 +110,9 @@ def normalize_input(input_list) -> np.array:
     return input_seq
 
 
-def normalize_output(output_list):
+def normalize_output(output_list, note_to_int):
     """convert output np.array from notes to ints"""
 
-    unique_notes = list(set(output_list))
-    note_to_int = dict((note_, number) for number, note_ in enumerate(unique_notes))
     output_seq = []
 
     for i in output_list:
@@ -143,7 +138,7 @@ def generate_midi(prediction_output):
             element, quarterLength = pattern.split(' ')
         else:
             element = pattern
-            quarterLength = '1'
+            quarterLength = '1.0'
 
         if '/' in quarterLength:
             x, y = quarterLength.split('/')
