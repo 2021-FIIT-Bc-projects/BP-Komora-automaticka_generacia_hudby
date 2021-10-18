@@ -4,52 +4,61 @@ import numpy as np
 import os
 
 
-def load_midi(midi_dir, withLengths=False, nameFilter='') -> np.array:
+def normalize_pitches(data):
+    pass
+
+
+def load_midi(midi_dir, withLengths=False, withRests=True, nameFilter='', instrumentFilter='') -> np.array:
     """Function, which returns np.array of sequences of notes"""
 
     note_sequences = []
 
     for file in os.listdir(midi_dir):
 
-        try:
-            if file.endswith(".mid") and nameFilter in file:
-
+        if file.endswith(".mid") and nameFilter in file:
+            try:
                 midi = converter.parse(midi_dir + "\\" + file)
-                partitioned_midi = instrument.partitionByInstrument(midi)
-                note_seq = []
+            except Exception:
+                continue
 
-                # Looping over all the instruments
-                for part in partitioned_midi.parts:
+            partitioned_midi = instrument.partitionByInstrument(midi)
+            note_seq = []
 
-                    notes_to_parse = part.recurse()
+            # Looping over all the instruments
+            for part in partitioned_midi.parts:
 
-                    # Looping over elements of song
-                    for element in notes_to_parse:
+                if instrumentFilter not in str(part):
+                    continue
 
-                        # note
-                        if isinstance(element, note.Note):
-                            if withLengths:
-                                note_seq.append(str(element.pitch) + " " + str(element.quarterLength))
-                            else:
-                                note_seq.append(str(element.pitch))
+                notes_to_parse = part.recurse()
 
-                        # chord
-                        elif isinstance(element, chord.Chord):
-                            if withLengths:
-                                note_seq.append('.'.join(str(n) for n in element.normalOrder) + " " + str(element.quarterLength))
-                            else:
-                                note_seq.append('.'.join(str(n) for n in element.normalOrder))
+                # Looping over elements of song
+                for element in notes_to_parse:
 
-                        # rest
-                        elif isinstance(element, note.Rest):
-                            if withLengths:
-                                note_seq.append('Rest' + " " + str(element.quarterLength))
-                            else:
-                                note_seq.append('Rest')
+                    # note
+                    if isinstance(element, note.Note):
+                        print("element: " + str(element.pitch) + " => " + str(element.pitch.ps))
+                        if withLengths:
+                            note_seq.append(str(element.pitch) + " " + str(element.quarterLength))
+                        else:
+                            note_seq.append(str(element.pitch))
 
-                note_sequences.append(note_seq)
-        except Exception:
-            print("Error - Failed to load data from " + str(file))
+                    # chord
+                    elif isinstance(element, chord.Chord):
+                        if withLengths:
+                            note_seq.append('.'.join(str(n) for n in element.normalOrder) + " " + str(element.quarterLength))
+                        else:
+                            note_seq.append('.'.join(str(n) for n in element.normalOrder))
+
+                    # rest
+                    elif isinstance(element, note.Rest) and withRests:
+                        if withLengths:
+                            note_seq.append('Rest' + " " + str(element.quarterLength))
+                        else:
+                            note_seq.append('Rest')
+
+            note_sequences.append(note_seq)
+
 
     return np.array(note_sequences, dtype=object)
 
@@ -59,6 +68,9 @@ def remove_rare(data, threshold=50):
     notes = [element for notes in data for element in notes]
     freq = dict(Counter(notes))
     frequent_notes = [note_ for note_, count in freq.items() if count >= threshold]
+
+    for note_, count in freq.items():
+        print(str(note_) + ": " + str(count))
 
     new_data = []
 
@@ -127,7 +139,7 @@ def reshapeX(x):
     return x
 
 
-def generate_midi(prediction_output):
+def generate_midi(prediction_output, filename='music.mid'):
     offset = 0
     output_notes = []
 
@@ -148,9 +160,7 @@ def generate_midi(prediction_output):
 
         # element is a rest
         if element == 'Rest':
-
             new_note = note.Rest(quarterLength=quarterLength)
-
             output_notes.append(new_note)
 
         # element is a chord
@@ -158,9 +168,7 @@ def generate_midi(prediction_output):
             notes_in_chord = element.split('.')
             notes = []
             for current_note in notes_in_chord:
-                cn = int(current_note)
-
-                new_note = note.Note(cn, quarterLength=quarterLength)
+                new_note = note.Note(int(current_note), quarterLength=quarterLength)
                 new_note.storedInstrument = instrument.Piano()
                 notes.append(new_note)
 
@@ -179,14 +187,6 @@ def generate_midi(prediction_output):
         offset += 1
 
     midi_stream = stream.Stream(output_notes)
-    filename = 'output_midi\\music'
-    id = 1
-    ext = '.mid'
-
-    while True:
-        full_name = filename + str(id) + ext
-        if not os.path.exists(full_name):
-            midi_stream.write('midi', fp=full_name)
-            break
-        else:
-            id += 1
+    folder = 'output_midi\\'
+    path = folder + filename
+    midi_stream.write('midi', fp=path)

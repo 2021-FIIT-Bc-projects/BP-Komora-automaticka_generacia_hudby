@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from keras.callbacks import *
 from keras.models import load_model
@@ -7,36 +8,41 @@ import pandas as pd
 from data_handling import load_midi, prepare_data, normalize_input, normalize_output, reshapeX, generate_midi, \
     remove_rare
 from LSTM import lstm_model
-from predict import generate_predictions
+from predict import prediction_combined, prediction_only
 from visualize import show_loss, show_acc
 
 # knobs to tweak
-freq_threshold = 10
+freq_threshold = 30
 no_of_timesteps = 16
 LSTM_size = 512
 Dense_size = 256
 recurrent_dropout = 0.2
 no_of_epochs = 100
-batch_size = 100
+batch_size = 32
 
 
-# loading data
-data = load_midi(".\\input_midi", withLengths=False)
+# load data from midi files
+data = load_midi(".\\input_midi", withLengths=False, withRests=True, instrumentFilter='Piano')
 data = remove_rare(data, threshold=freq_threshold)
 
+# prepare and normalize data
 notes = [element for notes in data for element in notes]
 unique_notes = list(set(notes))
+
 n_vocab = len(unique_notes)
 note_to_int = dict((note_, number) for number, note_ in enumerate(unique_notes))
 int_to_note = dict((number, note_) for number, note_ in enumerate(unique_notes))
+raw_input_list, raw_output_list = prepare_data(data, no_of_timesteps)
+X = normalize_input(raw_input_list, note_to_int)
+y = normalize_output(raw_output_list, note_to_int)
 
-# prepare and normalize data
-input_list, output_list = prepare_data(data, no_of_timesteps)
-normalized_input_list = normalize_input(input_list, note_to_int)
-normalized_output_list = normalize_output(output_list, note_to_int)
+print(int_to_note)
+
+plt.hist(raw_output_list)
+plt.show()
 
 # split training and testing values
-x_tr, x_val, y_tr, y_val = train_test_split(normalized_input_list, normalized_output_list, test_size=0.2, random_state=n_vocab)
+x_tr, x_val, y_tr, y_val = train_test_split(X, y, test_size=0.2, random_state=n_vocab)
 x_tr = reshapeX(x_tr)
 x_val = reshapeX(x_val)
 
@@ -49,14 +55,19 @@ history = model.fit(np.array(x_tr), np.array(y_tr), batch_size=batch_size, epoch
 # predict music
 best_model = load_model('best_model.h5')
 for i in range(5):
-    predictions = generate_predictions(x_val, best_model, no_of_timesteps, range_of_prediction=no_of_timesteps)
-    predicted_notes = [int_to_note[i] for i in predictions]
-    print(predicted_notes)
-    generate_midi(predicted_notes)
+    combo_prediction = prediction_combined(x_val, best_model, no_of_timesteps, note_to_int, range_of_prediction=no_of_timesteps)
+    predicted_notes = [int_to_note[i] for i in combo_prediction]
+    generate_midi(predicted_notes, filename='combo_prediction' + str(i) + '.mid')
+    print(combo_prediction)
 
-print(int_to_note[0])
+    prediction = prediction_only(x_val, best_model, no_of_timesteps, range_of_prediction=2 * no_of_timesteps)
+    predicted_notes = [int_to_note[i] for i in prediction]
+    generate_midi(predicted_notes, filename='prediction_only' + str(i) + '.mid')
+    print(prediction)
+
+
 # evaluate and visualize
-score = model.evaluate(x_val, y_val, verbose=0)
+score = best_model.evaluate(x_val, y_val, verbose=0)
 print("Test Score: ", score[0])
 print("Test accuracy: ", score[1])
 
