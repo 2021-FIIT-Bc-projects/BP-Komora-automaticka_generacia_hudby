@@ -59,7 +59,6 @@ def load_midi(midi_dir, withLengths=False, withRests=True, nameFilter='', instru
 
             note_sequences.append(note_seq)
 
-
     return np.array(note_sequences, dtype=object)
 
 
@@ -68,9 +67,6 @@ def remove_rare(data, threshold=50):
     notes = [element for notes in data for element in notes]
     freq = dict(Counter(notes))
     frequent_notes = [note_ for note_, count in freq.items() if count >= threshold]
-
-    for note_, count in freq.items():
-        print(str(note_) + ": " + str(count))
 
     new_data = []
 

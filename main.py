@@ -17,12 +17,12 @@ no_of_timesteps = 16
 LSTM_size = 512
 Dense_size = 256
 recurrent_dropout = 0.2
-no_of_epochs = 100
+no_of_epochs = 500
 batch_size = 32
 
 
 # load data from midi files
-data = load_midi(".\\input_midi", withLengths=False, withRests=True, instrumentFilter='Piano')
+data = load_midi(".\\input_midi", withLengths=False, withRests=True, instrumentFilter='Piano', nameFilter='book1')
 data = remove_rare(data, threshold=freq_threshold)
 
 # prepare and normalize data
@@ -33,7 +33,7 @@ n_vocab = len(unique_notes)
 note_to_int = dict((note_, number) for number, note_ in enumerate(unique_notes))
 int_to_note = dict((number, note_) for number, note_ in enumerate(unique_notes))
 raw_input_list, raw_output_list = prepare_data(data, no_of_timesteps)
-X = normalize_input(raw_input_list, note_to_int)
+X = normalize_input(raw_input_list, note_to_int) / n_vocab
 y = normalize_output(raw_output_list, note_to_int)
 
 print(int_to_note)
@@ -55,12 +55,12 @@ history = model.fit(np.array(x_tr), np.array(y_tr), batch_size=batch_size, epoch
 # predict music
 best_model = load_model('best_model.h5')
 for i in range(5):
-    combo_prediction = prediction_combined(x_val, best_model, no_of_timesteps, note_to_int, range_of_prediction=no_of_timesteps)
+    combo_prediction = prediction_combined(x_val, best_model, no_of_timesteps, note_to_int, n_vocab, range_of_prediction=no_of_timesteps)
     predicted_notes = [int_to_note[i] for i in combo_prediction]
     generate_midi(predicted_notes, filename='combo_prediction' + str(i) + '.mid')
     print(combo_prediction)
 
-    prediction = prediction_only(x_val, best_model, no_of_timesteps, range_of_prediction=2 * no_of_timesteps)
+    prediction = prediction_only(x_val, best_model, no_of_timesteps, n_vocab, range_of_prediction=2 * no_of_timesteps)
     predicted_notes = [int_to_note[i] for i in prediction]
     generate_midi(predicted_notes, filename='prediction_only' + str(i) + '.mid')
     print(prediction)
