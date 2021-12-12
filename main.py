@@ -3,10 +3,8 @@ from sklearn.model_selection import train_test_split
 from keras.callbacks import *
 from keras.models import load_model
 import numpy as np
-import pandas as pd
 
-from data_handling import load_midi, prepare_data, normalize_input, normalize_output, reshapeX, generate_midi, \
-    remove_rare
+from data_handling import load_midi, prepare_data, normalize_input, normalize_output, reshapeX, generate_midi, remove_rare
 from LSTM import lstm_model
 from predict import prediction_combined, prediction_only
 from visualize import show_loss, show_acc
@@ -14,15 +12,14 @@ from visualize import show_loss, show_acc
 # knobs to tweak
 freq_threshold = 30
 no_of_timesteps = 16
-LSTM_size = 512
-Dense_size = 256
+LSTM_size = 128
+Dense_size = 64
 recurrent_dropout = 0.2
-no_of_epochs = 500
+no_of_epochs = 100
 batch_size = 32
 
-
 # load data from midi files
-data = load_midi(".\\input_midi", withLengths=False, withRests=True, instrumentFilter='Piano', nameFilter='book1')
+data = load_midi(".\\input_midi", withLengths=False, withRests=True, instrumentFilter='Piano')
 data = remove_rare(data, threshold=freq_threshold)
 
 # prepare and normalize data
@@ -38,8 +35,8 @@ y = normalize_output(raw_output_list, note_to_int)
 
 print(int_to_note)
 
-plt.hist(raw_output_list)
-plt.show()
+# plt.hist(raw_output_list)
+# plt.show()
 
 # split training and testing values
 x_tr, x_val, y_tr, y_val = train_test_split(X, y, test_size=0.2, random_state=n_vocab)
@@ -54,17 +51,16 @@ history = model.fit(np.array(x_tr), np.array(y_tr), batch_size=batch_size, epoch
 
 # predict music
 best_model = load_model('best_model.h5')
-for i in range(5):
-    combo_prediction = prediction_combined(x_val, best_model, no_of_timesteps, note_to_int, n_vocab, range_of_prediction=no_of_timesteps)
-    predicted_notes = [int_to_note[i] for i in combo_prediction]
-    generate_midi(predicted_notes, filename='combo_prediction' + str(i) + '.mid')
-    print(combo_prediction)
-
-    prediction = prediction_only(x_val, best_model, no_of_timesteps, n_vocab, range_of_prediction=2 * no_of_timesteps)
-    predicted_notes = [int_to_note[i] for i in prediction]
-    generate_midi(predicted_notes, filename='prediction_only' + str(i) + '.mid')
-    print(prediction)
-
+# for i in range(5):
+#     combo_prediction = prediction_combined(x_val, best_model, no_of_timesteps, note_to_int, n_vocab, range_of_prediction=no_of_timesteps)
+#     predicted_notes = [int_to_note[i] for i in combo_prediction]
+#     generate_midi(predicted_notes, filename='combo_prediction' + str(i) + '.mid')
+#     print(combo_prediction)
+#
+#     prediction = prediction_only(x_val, best_model, no_of_timesteps, n_vocab, range_of_prediction=2 * no_of_timesteps)
+#     predicted_notes = [int_to_note[i] for i in prediction]
+#     generate_midi(predicted_notes, filename='prediction_only' + str(i) + '.mid')
+#     print(prediction)
 
 # evaluate and visualize
 score = best_model.evaluate(x_val, y_val, verbose=0)

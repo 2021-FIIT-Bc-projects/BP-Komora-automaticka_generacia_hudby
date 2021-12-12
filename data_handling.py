@@ -19,7 +19,7 @@ def load_midi(midi_dir, withLengths=False, withRests=True, nameFilter='', instru
             try:
                 midi = converter.parse(midi_dir + "\\" + file)
             except Exception:
-                continue
+                print("File " + str(file) + " failed to load")
 
             partitioned_midi = instrument.partitionByInstrument(midi)
             note_seq = []
@@ -37,7 +37,7 @@ def load_midi(midi_dir, withLengths=False, withRests=True, nameFilter='', instru
 
                     # note
                     if isinstance(element, note.Note):
-                        print("element: " + str(element.pitch) + " => " + str(element.pitch.ps))
+                        # print("element: " + str(element.pitch) + " => " + str(element.pitch.ps))
                         if withLengths:
                             note_seq.append(str(element.pitch) + " " + str(element.quarterLength))
                         else:
@@ -87,6 +87,7 @@ def prepare_data(data, input_sequence_length) -> (np.array, np.array):
     output_list = []
 
     for sequence in data:
+
         for i in range(0, len(sequence) - input_sequence_length):
             # preparing input and output sequences
 
