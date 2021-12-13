@@ -1,7 +1,3 @@
-import pandas as pd
-import numpy as np
-
-
 def generate_data1(no_of_timesteps=16, no_of_seqs=10):
     notes = [x for y in range(no_of_seqs) for x in range(no_of_timesteps)]
     return notes

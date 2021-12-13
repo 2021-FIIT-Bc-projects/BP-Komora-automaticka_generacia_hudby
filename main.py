@@ -4,7 +4,7 @@ from keras.callbacks import *
 from keras.models import load_model
 import numpy as np
 
-from data_handling import load_midi, prepare_data, normalize_input, normalize_output, reshapeX, generate_midi, remove_rare
+from data_handling import load_midi, prepare_data, normalize_X, normalize_y, reshape_X, generate_midi, remove_rare
 from LSTM import lstm_model
 from predict import prediction_combined, prediction_only
 from visualize import show_loss, show_acc
@@ -30,8 +30,8 @@ n_vocab = len(unique_notes)
 note_to_int = dict((note_, number) for number, note_ in enumerate(unique_notes))
 int_to_note = dict((number, note_) for number, note_ in enumerate(unique_notes))
 raw_input_list, raw_output_list = prepare_data(data, no_of_timesteps)
-X = normalize_input(raw_input_list, note_to_int) / n_vocab
-y = normalize_output(raw_output_list, note_to_int)
+X = normalize_X(raw_input_list, note_to_int) / n_vocab
+y = normalize_y(raw_output_list, note_to_int)
 
 print(int_to_note)
 
@@ -40,8 +40,8 @@ print(int_to_note)
 
 # split training and testing values
 x_tr, x_val, y_tr, y_val = train_test_split(X, y, test_size=0.2, random_state=n_vocab)
-x_tr = reshapeX(x_tr)
-x_val = reshapeX(x_val)
+x_tr = reshape_X(x_tr)
+x_val = reshape_X(x_val)
 
 # train model
 model = lstm_model(n_vocab, no_of_timesteps, LSTM_size=LSTM_size, Dense_size=Dense_size, recurrent_dropout=recurrent_dropout)

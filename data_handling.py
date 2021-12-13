@@ -3,9 +3,7 @@ from music21 import *
 import numpy as np
 import os
 
-
-def normalize_pitches(data):
-    pass
+"""V tomto subore sa venujem praci s datami"""
 
 
 def load_midi(midi_dir, withLengths=False, withRests=True, nameFilter='', instrumentFilter='') -> np.array:
@@ -103,7 +101,7 @@ def prepare_data(data, input_sequence_length) -> (np.array, np.array):
     return input_list, output_list
 
 
-def normalize_input(input_list, note_to_int) -> np.array:
+def normalize_X(input_list, note_to_int) -> np.array:
     """convert input np.array from note sequences to int sequences"""
 
     input_seq = []
@@ -119,7 +117,7 @@ def normalize_input(input_list, note_to_int) -> np.array:
     return input_seq
 
 
-def normalize_output(output_list, note_to_int):
+def normalize_y(output_list, note_to_int):
     """convert output np.array from notes to ints"""
 
     output_seq = []
@@ -131,7 +129,7 @@ def normalize_output(output_list, note_to_int):
     return output_seq
 
 
-def reshapeX(x):
+def reshape_X(x):
     x = np.reshape(x, (x.shape[0], 1, x.shape[1]))
     return x
 

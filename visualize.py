@@ -1,5 +1,7 @@
 from matplotlib import pyplot as plt
 
+""""V tomto subore sa venujem plotovaniu straty a presnosti pri trenovani modelu"""
+
 
 def show_loss(history, no_of_epochs, filename="", show=True):
     plt.plot(history.history['loss'], label='loss')
