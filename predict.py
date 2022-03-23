@@ -5,9 +5,7 @@ import numpy as np
 from data_handling import reshape_X
 
 
-def prediction_combined(x_val, model, no_of_timesteps, note_to_int, n_vocab, range_of_prediction=10):
-    ind = np.random.randint(0, len(x_val) - 1)
-    random_music = x_val[ind]
+def prediction_combined(random_music, model, no_of_timesteps, note_to_int, n_vocab, range_of_prediction=10):
     predictions = list(random_music[0] * n_vocab)
 
     for i in range(5):
@@ -27,9 +25,7 @@ def prediction_combined(x_val, model, no_of_timesteps, note_to_int, n_vocab, ran
     return np.array(predictions)
 
 
-def prediction_only(x_val, model, no_of_timesteps, n_vocab, range_of_prediction=10):
-    ind = np.random.randint(0, len(x_val) - 1)
-    random_music = x_val[ind]
+def prediction_only(random_music, model, no_of_timesteps, n_vocab, range_of_prediction=10):
     predictions = []
 
     for i in range(range_of_prediction):

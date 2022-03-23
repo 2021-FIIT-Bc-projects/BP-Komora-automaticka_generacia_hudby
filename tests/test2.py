@@ -36,7 +36,7 @@ def writeResults(no_of_timesteps, score):
 
 def test_timesteps(prepare=False, normalize=False, train=False, evaluate=False,
                    LSTM_size=256, Dense_size=128, recurrent_dropout=0.2, no_of_epochs=150, batch_size=16,
-                   freq_threshold=20, start_NOT=2):
+                   freq_threshold=20, start_NOT=8):
 
     # write experiment parameters to file
     initExperiment(LSTM_size, Dense_size, recurrent_dropout, no_of_epochs, batch_size, freq_threshold)
@@ -52,7 +52,7 @@ def test_timesteps(prepare=False, normalize=False, train=False, evaluate=False,
     note_to_int = dict((note_, number) for number, note_ in enumerate(unique_notes))
 
     # looping through different numbers of timesteps
-    for no_of_timesteps in range(start_NOT, 21, 2):
+    for no_of_timesteps in range(start_NOT, 9, 2):
 
         # Prepare data
         if prepare:
@@ -70,13 +70,13 @@ def test_timesteps(prepare=False, normalize=False, train=False, evaluate=False,
         if train:
             model = lstm_model(n_vocab, no_of_timesteps, LSTM_size=LSTM_size, Dense_size=Dense_size,
                                recurrent_dropout=recurrent_dropout)
-            mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='min', save_best_only=True, verbose=1)
+            mc = ModelCheckpoint('models/exp2_NoT={}.h5'.format(no_of_timesteps), monitor='val_loss', mode='min', save_best_only=True, verbose=1)
             history = model.fit(np.array(X_tr), np.array(y_tr), batch_size=batch_size, epochs=no_of_epochs,
                                 validation_data=(np.array(X_val), np.array(y_val)), verbose=0, callbacks=[mc])
 
         # Evaluate best model
         if evaluate:
-            best_model = load_model('best_model.h5')
+            best_model = load_model('models/exp2_NoT={}.h5'.format(no_of_timesteps))
             score = best_model.evaluate(X_val, y_val, verbose=0)
 
             writeResults(no_of_timesteps, score)
@@ -88,4 +88,4 @@ def test_timesteps(prepare=False, normalize=False, train=False, evaluate=False,
     print("Test completed")
 
 
-test_timesteps(prepare=True, normalize=True, train=True, evaluate=True, start_NOT=18)
+test_timesteps(prepare=True, normalize=True, train=True, evaluate=True)

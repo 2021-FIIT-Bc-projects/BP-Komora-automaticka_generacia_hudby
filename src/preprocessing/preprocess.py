@@ -1,13 +1,14 @@
 import sys
+import getopt
 from collections import Counter
-import json
 import numpy as np
-import pandas as pd
-
-from IO import load_midi
 
 
-def remove_rare(data, threshold):
+from IO import load_midi_input, generate_output
+
+
+# Remove less frequent notes(less frequent, @threshold) from raw data
+def remove_rare(data: np.array, threshold: int) -> np.array:
 
     notes = [element for notes in data for element in notes]
     freq = dict(Counter(notes))
@@ -25,6 +26,7 @@ def remove_rare(data, threshold):
     return np.array(new_data, dtype=object)
 
 
+# Get input sequences and output notes from list of songs
 def prepare_data(data, input_sequence_length) -> (np.array, np.array):
     """function, which generates input_sequences and output_notes"""
 
@@ -48,7 +50,8 @@ def prepare_data(data, input_sequence_length) -> (np.array, np.array):
     return input_list, output_list
 
 
-def normalize_X(input_list, note_to_int) -> np.array:
+# Normalize input sequences - encode notes to numbers with @note_to_int dictionary
+def Xnormalize(input_list, note_to_int) -> np.array:
     """convert input np.array from note sequences to int sequences"""
 
     input_seq = []
@@ -64,7 +67,8 @@ def normalize_X(input_list, note_to_int) -> np.array:
     return input_seq
 
 
-def normalize_y(output_list, note_to_int):
+# Normalize output notes - encode notes to numbers with @note_to_int dictionary
+def ynormalize(output_list, note_to_int) -> np.array:
     """convert output np.array from notes to ints"""
 
     output_seq = []
@@ -81,13 +85,13 @@ if __name__ == '__main__':
     try:
         dirname = sys.argv[1]
     except IndexError:
-        print("You have to specify input folder")
+        print("You have to specify input folder! ")
         dirname = '../../input_midi'
 
     try:
         no_of_timesteps = int(sys.argv[2])
     except IndexError:
-        print("You have to specify number of timesteps")
+        print("You have to specify number of timesteps! ")
         no_of_timesteps = 16
 
     try:
@@ -95,33 +99,25 @@ if __name__ == '__main__':
     except IndexError:
         freq_threshold = 50
 
-    # load data from midi files
-    data = load_midi(dirname, withLengths=False, withRests=True, instrumentFilter='Piano')
-    data = remove_rare(data, threshold=freq_threshold)
+    # 1. load raw data from midi files
+    data = load_midi_input(dirname, withLengths=False, withRests=True, instrumentFilter='Piano')
+    clean_data = remove_rare(data, threshold=freq_threshold)
 
-    print("Data are loaded")
+    # 2. prepare data - split input/output
+    raw_input, raw_output = prepare_data(clean_data, no_of_timesteps)
 
-    # prepare and normalize data
-    notes = [element for notes in data for element in notes]
-    unique_notes = list(set(notes))
-    n_vocab = len(unique_notes)
-
+    # define variables
+    unique_notes = list(set([element for notes in clean_data for element in notes]))
     note_to_int = dict((note_, number) for number, note_ in enumerate(unique_notes))
     int_to_note = dict((number, note_) for number, note_ in enumerate(unique_notes))
-    raw_input_list, raw_output_list = prepare_data(data, no_of_timesteps)
-    print("Data are prepared")
 
-    X = normalize_X(raw_input_list, note_to_int) / n_vocab
-    y = normalize_y(raw_output_list, note_to_int)
-    print("---------------------------------------------------------------")
-    X = pd.DataFrame(X)
-    X.to_csv(r"output/X.csv")
-    print("---------------------------------------------------------------")
-    y = pd.DataFrame(y)
-    y.to_csv(r"output/y.csv")
+    # 3. normalize data
+    X = Xnormalize(raw_input, note_to_int) / len(unique_notes)
+    y = ynormalize(raw_output, note_to_int)
 
-    with open('output/notes_dict.json', 'w') as convert_file:
-        convert_file.write(json.dumps(int_to_note))
+    # 4. export data
+    generate_output(X, y, int_to_note, no_of_timesteps)
+
 
 
 

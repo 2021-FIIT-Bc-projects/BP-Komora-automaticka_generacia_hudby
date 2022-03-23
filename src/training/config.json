@@ -1,0 +1,8 @@
+{
+  "no_of_timesteps": 16,
+  "LSTM_size": 128,
+  "Dense_size": 64,
+  "recurrent_dropout": 0.2,
+  "batch_size": 32,
+  "no_of_epochs": 1
+}

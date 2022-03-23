@@ -33,6 +33,7 @@ raw_input_list, raw_output_list = prepare_data(data, no_of_timesteps)
 X = normalize_X(raw_input_list, note_to_int) / n_vocab
 y = normalize_y(raw_output_list, note_to_int)
 
+print(y)
 print(int_to_note)
 
 # plt.hist(raw_output_list)
@@ -42,6 +43,11 @@ print(int_to_note)
 x_tr, x_val, y_tr, y_val = train_test_split(X, y, test_size=0.2, random_state=n_vocab)
 x_tr = reshape_X(x_tr)
 x_val = reshape_X(x_val)
+
+print("x_tr: %s" % str(x_tr.shape))
+print("y_tr: %s" % str(y_tr.shape))
+print("x_val: %s" % str(x_val.shape))
+print("y_val: %s" % str(y_val.shape))
 
 # train model
 model = lstm_model(n_vocab, no_of_timesteps, LSTM_size=LSTM_size, Dense_size=Dense_size, recurrent_dropout=recurrent_dropout)
