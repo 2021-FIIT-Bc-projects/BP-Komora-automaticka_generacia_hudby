@@ -24,9 +24,14 @@ def load_midi_input(midi_dir, withLengths=False, withRests=True, nameFilter='', 
             note_seq = []
 
             # Looping over all the instruments
+            if partitioned_midi is None:
+                continue
+
             for part in partitioned_midi.parts:
 
-                if instrumentFilter not in str(part):
+                print(part)
+
+                if instrumentFilter.lower() not in str(part).lower():
                     continue
 
                 notes_to_parse = part.recurse()
@@ -62,11 +67,10 @@ def load_midi_input(midi_dir, withLengths=False, withRests=True, nameFilter='', 
     return np.array(note_sequences, dtype=object)
 
 
-def generate_output(X, y, int_to_note, no_of_timesteps):
+def generate_output(X, y, int_to_note, no_of_timesteps, midi_dir):
     parent_dir = os.path.abspath(".")
     dirname = "output"
     path = os.path.join(parent_dir, dirname)
-    print(path)
     os.makedirs(path)
 
     file_paths = ["output/X.csv", "output/y.csv", "output/notes.json"]
@@ -79,14 +83,10 @@ def generate_output(X, y, int_to_note, no_of_timesteps):
     with open(file_paths[2], 'w') as convert_file:
         convert_file.write(json.dumps(int_to_note))
 
-    dt = datetime.datetime.now()
-    hour = dt.strftime("%H")
-    minute = dt.strftime("%M")
-
-    filename = "preprocessed-%d_%s%s" % (no_of_timesteps, hour, minute)
+    filename = "../../output/preprocessed/preprocessed(%d)_%s" % (no_of_timesteps, midi_dir)
     file_format = "zip"
-    directory = path
-    shutil.make_archive(filename, file_format, directory)
+    root_dir = "./output"
+    shutil.make_archive(filename, file_format, root_dir)
     shutil.rmtree(path)
 
-    print('All files zipped successfully!')
+    print("Data were preprocessed and exported to " + os.path.abspath(filename))

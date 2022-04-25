@@ -1,3 +1,5 @@
+import argparse
+import os
 import sys
 import getopt
 from collections import Counter
@@ -82,28 +84,32 @@ def ynormalize(output_list, note_to_int) -> np.array:
 
 if __name__ == '__main__':
 
-    try:
-        dirname = sys.argv[1]
-    except IndexError:
-        print("You have to specify input folder! ")
-        dirname = '../../input_midi'
+    parser = argparse.ArgumentParser(description="An addition program")
 
-    try:
-        no_of_timesteps = int(sys.argv[2])
-    except IndexError:
-        print("You have to specify number of timesteps! ")
-        no_of_timesteps = 16
+    # add argument
+    parser.add_argument("-dir", type=str, nargs=1, metavar="path to midi dir")
+    parser.add_argument("-nots", type=int, nargs=1, metavar="number of timesteps")
+    parser.add_argument("-ft", type=int, nargs=1, default=50, metavar="minimum note frequency")
+    parser.add_argument("-i", type=str, nargs=1, default="piano", metavar="instrument")
 
-    try:
-        freq_threshold = sys.argv[3]
-    except IndexError:
-        freq_threshold = 50
+    # parse the arguments from standard input
+    args = parser.parse_args()
+
+    dirname = args.dir[0]
+    no_of_timesteps = args.nots[0]
+    freq_threshold = args.ft[0]
+    instrument = args.i[0]
 
     # 1. load raw data from midi files
-    data = load_midi_input(dirname, withLengths=False, withRests=True, instrumentFilter='Piano')
+    print("Starting data load...")
+    data = load_midi_input(dirname, withLengths=False, withRests=True, instrumentFilter=instrument)
+
+    # 2. remove low frequency notes
+    print("Removing low frequency notes...")
     clean_data = remove_rare(data, threshold=freq_threshold)
 
-    # 2. prepare data - split input/output
+    # 3. prepare data - split input/output
+    print("Preparing data...")
     raw_input, raw_output = prepare_data(clean_data, no_of_timesteps)
 
     # define variables
@@ -111,12 +117,14 @@ if __name__ == '__main__':
     note_to_int = dict((note_, number) for number, note_ in enumerate(unique_notes))
     int_to_note = dict((number, note_) for number, note_ in enumerate(unique_notes))
 
-    # 3. normalize data
+    # 4. normalize data
+    print("Normalizing data...")
     X = Xnormalize(raw_input, note_to_int) / len(unique_notes)
     y = ynormalize(raw_output, note_to_int)
 
-    # 4. export data
-    generate_output(X, y, int_to_note, no_of_timesteps)
+    # 5. export data
+    dirname = os.path.basename(os.path.normpath(dirname))
+    generate_output(X, y, int_to_note, no_of_timesteps, dirname)
 
 
 
