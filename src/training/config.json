@@ -1,11 +1,11 @@
 {
-  "no_of_timesteps": 16,
+  "no_of_timesteps": 32,
   "recurrent_size": 512,
   "dense_size": 256,
   "recurrent_dropout":  0.3,
   "batch_size": 100,
-  "no_of_epochs": 100,
-  "model": "lstm",
+  "no_of_epochs": 500,
+  "model": "gru",
   "metrics": ["accuracy"],
   "activation": "relu"
 }

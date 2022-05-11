@@ -58,6 +58,7 @@ def init_output(x_tr, x_val, params, int_to_note):
 
     pd.DataFrame(x_tr).to_csv("output/x_tr.csv")
     pd.DataFrame(x_val).to_csv("output/x_val.csv")
+
     with open('output/config.json', 'w') as convert_file:
         convert_file.write(json.dumps(params))
 

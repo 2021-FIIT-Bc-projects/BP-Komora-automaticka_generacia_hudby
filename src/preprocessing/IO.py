@@ -83,7 +83,7 @@ def generate_output(X, y, int_to_note, no_of_timesteps, midi_dir):
     with open(file_paths[2], 'w') as convert_file:
         convert_file.write(json.dumps(int_to_note))
 
-    filename = "../../output/preprocessed/preprocessed(%d)_%s" % (no_of_timesteps, midi_dir)
+    filename = "../../output/preprocessed/preprocessed(%d)_%s(no-rests)" % (no_of_timesteps, midi_dir)
     file_format = "zip"
     root_dir = "./output"
     shutil.make_archive(filename, file_format, root_dir)

@@ -59,6 +59,11 @@ def load_base_music(approach, n_vocab, no_of_timesteps):
     return base_music
 
 
+def load_training_data():
+    x_tr = pd.read_csv('input/x_tr.csv', index_col=0).to_numpy().flatten()
+    return x_tr
+
+
 def export(predicted_notes, filename):
     offset = 0
     output_notes = []

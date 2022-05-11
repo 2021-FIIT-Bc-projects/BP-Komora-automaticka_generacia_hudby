@@ -12,20 +12,20 @@ from IO import load_midi_input, generate_output
 # Remove less frequent notes(less frequent, @threshold) from raw data
 def remove_rare(data: np.array, threshold: int) -> np.array:
 
-    notes = [element for notes in data for element in notes]
+    notes = [note for song in data for note in song]
     freq = dict(Counter(notes))
     frequent_notes = [note_ for note_, count in freq.items() if count >= threshold]
 
-    new_data = []
+    filtered_dataset = []
 
     for song in data:
-        temp = []
+        filtered_song = []
         for note in song:
             if note in frequent_notes:
-                temp.append(note)
-        new_data.append(temp)
+                filtered_song.append(note)
+        filtered_dataset.append(filtered_song)
 
-    return np.array(new_data, dtype=object)
+    return np.array(filtered_dataset, dtype=object)
 
 
 # Get input sequences and output notes from list of songs
@@ -35,13 +35,12 @@ def prepare_data(data, input_sequence_length) -> (np.array, np.array):
     input_list = []
     output_list = []
 
-    for sequence in data:
-
-        for i in range(0, len(sequence) - input_sequence_length):
+    for song in data:
+        for i in range(0, len(song) - input_sequence_length):
             # preparing input and output sequences
 
-            input_sequence = sequence[i:i + input_sequence_length]
-            output_note = sequence[i + input_sequence_length]
+            input_sequence = song[i:i + input_sequence_length]
+            output_note = song[i + input_sequence_length]
 
             input_list.append(input_sequence)
             output_list.append(output_note)
@@ -82,18 +81,25 @@ def ynormalize(output_list, note_to_int) -> np.array:
     return output_seq
 
 
-if __name__ == '__main__':
-
+def parse_input_args():
     parser = argparse.ArgumentParser(description="An addition program")
 
     # add argument
     parser.add_argument("-dir", type=str, nargs=1, metavar="path to midi dir")
-    parser.add_argument("-nots", type=int, nargs=1, metavar="number of timesteps")
-    parser.add_argument("-ft", type=int, nargs=1, default=50, metavar="minimum note frequency")
+    parser.add_argument("-nots", type=int, nargs=1, default=8, metavar="number of timesteps")
+    parser.add_argument("-ft", type=int, nargs=1, default=[50], metavar="minimum note frequency")
     parser.add_argument("-i", type=str, nargs=1, default="piano", metavar="instrument")
 
     # parse the arguments from standard input
     args = parser.parse_args()
+
+    return args
+
+
+if __name__ == '__main__':
+
+    # parse the arguments from standard input
+    args = parse_input_args()
 
     dirname = args.dir[0]
     no_of_timesteps = args.nots[0]
@@ -102,7 +108,7 @@ if __name__ == '__main__':
 
     # 1. load raw data from midi files
     print("Starting data load...")
-    data = load_midi_input(dirname, withLengths=False, withRests=True, instrumentFilter=instrument)
+    data = load_midi_input(dirname, withLengths=False, withRests=False, instrumentFilter=instrument)
 
     # 2. remove low frequency notes
     print("Removing low frequency notes...")
@@ -112,7 +118,7 @@ if __name__ == '__main__':
     print("Preparing data...")
     raw_input, raw_output = prepare_data(clean_data, no_of_timesteps)
 
-    # define variables
+    # define dicts for encoding of notes
     unique_notes = list(set([element for notes in clean_data for element in notes]))
     note_to_int = dict((note_, number) for number, note_ in enumerate(unique_notes))
     int_to_note = dict((number, note_) for number, note_ in enumerate(unique_notes))

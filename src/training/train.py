@@ -1,3 +1,4 @@
+import os
 import argparse
 
 from keras.callbacks import *
@@ -49,12 +50,24 @@ if __name__ == "__main__":
 
     # add argument
     parser.add_argument("-path", type=str, nargs=1, metavar="path to preprocessed data")
+    parser.add_argument("-model", type=str, nargs=1, metavar="type of rnn")
+    parser.add_argument("-mc", type=str, nargs=1, default=["1"], metavar="complexity of rnn")
+    parser.add_argument("-nots", type=int, nargs=1, default=[8], metavar="number of timesteps")
+    parser.add_argument("-activation", type=str, nargs=1, default=['relu'], metavar="activation function")
 
     # parse the arguments from standard input
     args = parser.parse_args()
 
     # Load data
     input_path = args.path[0]
+    model_type = args.model[0]
+    model_complexity = args.mc[0]
+    no_of_timesteps = args.nots[0]
+    activation = args.activation[0]
+    params["model"] = model_type
+    params["model_complexity"] = model_complexity
+    params["no_of_timesteps"] = no_of_timesteps
+    params["activation"] = activation
     X, y, int_to_note = load_data(input_path)
 
     # number of distinct notes
@@ -74,7 +87,8 @@ if __name__ == "__main__":
     one_hot_yval[np.arange(y_val.size), y_val] = 1
 
     # train model
-    model = generate_model(model_type=params["model"],
+    model = generate_model(model_type=model_type,
+                           model_complexity=model_complexity,
                            n_vocab=n_vocab,
                            dense_size=params["dense_size"],
                            recurrent_size=params["recurrent_size"],
@@ -89,6 +103,7 @@ if __name__ == "__main__":
     model.summary()
 
     mc = ModelCheckpoint('output/model.h5', monitor='loss', mode='min', save_best_only=True, verbose=1)
+    earlyStopping = EarlyStopping(monitor='loss', patience=3)
 
     history = model.fit(x=x_tr,
                         y=one_hot_ytr,
@@ -106,5 +121,5 @@ if __name__ == "__main__":
     visualize_acc(history, params['no_of_epochs'], filename="output/acc")
     visualize_loss(history, params['no_of_epochs'], filename="output/loss")
 
-    bundle_output(params['no_of_timesteps'], params['model'])
+    bundle_output(params['no_of_timesteps'], str(str(model_type) + str(activation)))
     
